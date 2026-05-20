@@ -21,6 +21,10 @@ set ftp:ssl-force true
 set ftp:ssl-protect-data true
 set ftp:passive-mode true
 set ssl:verify-certificate no
-mirror -R --delete --verbose --no-perms public/ "${FTP_REMOTE%/}/"
+mirror -R --delete --verbose --no-perms \
+  --exclude-glob "storage/*.jsonl" \
+  --exclude-glob "storage/*.log" \
+  --exclude-glob "storage/uploads/**" \
+  public/ "${FTP_REMOTE%/}/"
 bye
 LFTP

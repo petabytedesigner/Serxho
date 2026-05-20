@@ -8,6 +8,8 @@ const SITE_NAME = 'Creative Art by Serxho';
 
 header('Content-Type: text/html; charset=utf-8');
 
+require_once __DIR__ . '/includes/database.php';
+
 function e(string $value): string {
     return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
 }
@@ -42,16 +44,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'message' => mb_substr($message, 0, 2000),
             ];
 
-            $dir = __DIR__ . '/storage';
-            if (!is_dir($dir)) {
-                mkdir($dir, 0755, true);
-            }
+            try {
+                $stmt = db()->prepare(
+                    'INSERT INTO contact_messages
+                        (language_code, name, phone, email, service, message, source, ip_address, user_agent)
+                     VALUES
+                        (:language_code, :name, :phone, :email, :service, :message, :source, :ip_address, :user_agent)'
+                );
 
-            file_put_contents(
-                $dir . '/leads.jsonl',
-                json_encode($lead, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . PHP_EOL,
-                FILE_APPEND | LOCK_EX
-            );
+                $stmt->execute([
+                    ':language_code' => 'sq',
+                    ':name' => $lead['name'],
+                    ':phone' => $lead['phone'],
+                    ':email' => $lead['email'] !== '' ? $lead['email'] : null,
+                    ':service' => $lead['service'] !== '' ? $lead['service'] : null,
+                    ':message' => $lead['message'],
+                    ':source' => 'website_index_form',
+                    ':ip_address' => mb_substr((string)($_SERVER['REMOTE_ADDR'] ?? ''), 0, 45) ?: null,
+                    ':user_agent' => mb_substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 255) ?: null,
+                ]);
+            } catch (Throwable $dbError) {
+                $dir = __DIR__ . '/storage';
+                if (!is_dir($dir)) {
+                    mkdir($dir, 0755, true);
+                }
+
+                file_put_contents(
+                    $dir . '/leads.jsonl',
+                    json_encode($lead, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . PHP_EOL,
+                    FILE_APPEND | LOCK_EX
+                );
+            }
 
             $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
             $success = true;
