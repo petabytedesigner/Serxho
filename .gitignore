@@ -10,3 +10,4 @@ public/storage/uploads/
 
 !public/storage/.htaccess
 !public/storage/index.html
+public/test-db.php
