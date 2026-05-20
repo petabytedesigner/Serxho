@@ -1,0 +1,12 @@
+.env
+*.local.php
+config.local.php
+public/includes/config.local.php
+
+*.log
+public/storage/*.jsonl
+public/storage/*.log
+public/storage/uploads/
+
+!public/storage/.htaccess
+!public/storage/index.html
